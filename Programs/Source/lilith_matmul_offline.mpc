@@ -1,0 +1,36 @@
+import ml
+from Compiler.instructions import writesharestofile
+
+batch_size = int(program.args[1])
+input_size = int(program.args[2])
+output_size = int(program.args[3])
+
+ml.Layer.n_threads = None 
+ml.FixConv2d.use_conv2ds = True
+# sfix.set_precision(16, 32)
+sfix.set_precision(0, 31)
+
+opt = ml.Optimizer()
+dense = ml.Dense(batch_size, input_size, output_size)
+dense.input_bias = False
+opt.layers = [dense]
+
+# load the matrix 
+dense.input_from(1)
+
+# load inputs 
+@for_range(input_size)
+def _(i):
+    dense.X.array[i] = sint.get_random_int(32) # leaves fraction zeroed out
+
+# run inference
+opt.forward(1)
+
+@for_range(input_size)
+def _(i):
+    writesharestofile(dense.X.array[i].v)
+
+@for_range(output_size)
+def _(i):
+    writesharestofile(dense.Y.array[i].v)
+
